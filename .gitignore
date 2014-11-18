@@ -1,1 +1,3 @@
 *.zip
+**/wp-content/uploads/
+**/wp-content/plugins/

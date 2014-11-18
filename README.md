@@ -49,3 +49,12 @@ Pods
     Project Resources ('project\_resource')
 
 3. Added a pods list items widget to the Widgets Area to show recent projects.
+
+Custom Taxonomy Ordering
+------------------------
+Installed i-order-terms plugin and dragged term items into proper order.  This adds custom\_order column in term\_taxonomy table.
+
+Custom Display of Projects
+--------------------------
+TBD
+

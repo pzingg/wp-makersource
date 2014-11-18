@@ -1,0 +1,35 @@
+/*
+ Theme Name:   Maker Source
+ Theme URI:    http://example.com/makersource/
+ Description:  Twenty Thirteen Child Theme
+ Author:       Peter Zingg
+ Author URI:   http://example.com
+ Template:     twentythirteen
+ Version:      1.0.0
+ Tags:         light, dark, two-columns, right-sidebar, responsive-layout, accessibility-ready
+ Text Domain:  makersource
+*/
+
+
+/* =Theme customization starts here
+-------------------------------------------------------------- */
+
+/* http://127.0.0.1:8080/project/ */
+
+.archive .project .entry-content {
+     display:none;
+}
+
+.archive .project .entry-title a {
+     font-size:0.6em;
+}
+
+.archive .project {
+     display:inline-block;
+     vertical-align:top;
+     width:25%;
+     padding:1.25%;
+     margin:1.25%;
+     min-height:140px;
+     background-color:#eee;
+}
