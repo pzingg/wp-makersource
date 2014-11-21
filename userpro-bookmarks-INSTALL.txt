@@ -1,0 +1,62 @@
+Thanks for purchasing the Bookmarks plugin by UserPro.
+
+1. Installation
+==================
+
+Please upload the installable plugin ZIP (userpro-bookmarks.zip) to your WordPress plugins and activate it.
+
+2. Usage
+==================
+
+To display the bookmark widget:
+
+- You can use the sidebar widget (UserPro - Bookmark Widget)
+
+- You can turn on automatic widget after post content in UserPro > User Bookmarks settings. Where you can exclude content, or certain post type(s)
+
+- Shortcode method: [userpro_bookmark]
+
+- API/PHP method: global $userpro_fav; echo $userpro_fav->bookmark();
+
+To embed/display the user bookmarks/collections (for viewing/managing)
+
+- Use this shortcode on the page you need (profile page, or any other page)
+
+[userpro_bookmarklist]
+
+- API method: global $userpro_fav; echo $userpro_fav->bookmarks();
+
+3. Customize CSS
+==================
+
+- All css rules are in two css files inside /css/ folder
+
+* userpro-bookmarks.css (for the bookmark widget)
+* userpro-collections.css (for the collections shortcode)
+
+4. Manage options
+==================
+
+All settings can be customized under UserPro > User Bookmarks! dashboard panel.
+
+Besides global settings, there are also "shortcode" options available for the [userpro_bookmark] shortcode. They OVERRIDE your global settings.
+
+			'width' Set the width of bookmark widget in px/%
+			'align' left/right
+			'inline' 1/0
+			'no_top_margin' 1/0
+			'no_bottom_margin' 1/0
+			'pct_gap' e.g. 5, 10 etc
+			'px_gap' e.g. 20, 30, etc
+			'widgetized' 1/0
+			'remove_bookmark' the text for remove bookmark
+			'dialog_bookmarked' the text for bookmarked post in dialog
+			'dialog_unbookmarked' the text for removed bookmark in dialog
+			'default_collection' default collection name
+			'add_to_collection' add to collection
+			'new_collection' new collection
+			'new_collection_placeholder' enter collection name
+			'add_new_collection' add new collection
+			
+That's it for now!
+Enjoy =) and let your visitors bookmark their favs!!

@@ -1,0 +1,44 @@
+Thanks for your interest in User Pro plugin. Please read the following instructions
+to get started asap with the plugin and solve common issues.
+
+Support is provided via our public community and support forums here:
+
+http://userproplugin.com/userpro/forums/
+
+Please create a free account and post your questions if you have any.
+
+1. INSTALLATION
+
+- Please do not upload the whole file you download from CodeCanyon, extract your download first
+- Upload the userpro.zip file only to your WordPress plugins
+- Or unzip userpro.zip and upload the plugin folder to your /wp-content/plugins/ directory
+- Activate the plugin. That's it!
+
+2. SEO, Pretty Permalinks Configuration
+
+User Pro will create pages automatically for profile view, editing, registration and login, and members
+directory. If you have pretty permalinks activated and want to enjoy links such as /profile/Username or /profile/edit/ 
+Please open your WordPress dashboard after activating the plugin for first time only.
+
+Go to Settings > Permalinks > click on Save changes without changing anything. That will activate nice URLs by User Pro!
+
+3. Make sure that thumbs are working
+
+Please make sure that lib/cache folder has proper CHMOD 755 or 777 and that the folder contains empty index file
+and another file with .touch extension (0 byte) If you have problems viewing user thumbnails you need to check
+the chmod of your lib/cache folder and these 2 files and make sure the folder is writeable.
+
+4. Getting Started
+
+By default, User Pro will automatically create pages for you for registering, login, profile, etc. If you wish
+to customize your fields, you simply need to open WordPress dashboard > UserPro. The inteface has been made 
+very easy to use, drag and drop fields around, re-order fields, remove fields you do not want. You can build
+an unlimited number of fields and populate the form anyway you like depending on your needs.
+
+5. Modifying plugin settings
+
+Go to do UserPro > Global Options tab to change plugin settings. To make sure that pages are setup correctly, or
+in case you want to edit the slugs of pages e.g. /profile/ to /myprofile/ or /register/ to /signup/ you can 
+simply do this in the Setup Pages tab.
+
+Please make sure that you save Permalink structure if you rebuild the pages or changed the page slugs when nice permalinks is active.
