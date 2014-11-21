@@ -19,7 +19,7 @@
 
 	<?php elseif ( is_search() ) : ?>
 
-	<p><?php _e( 'Sorry, but nothing matched your search terms. Please try again with different keywords.', 'twentythirteen' ); ?></p>
+	<p><?php _e( 'Sorry, but nothing matched your search terms. Try some other keywords and terms.', 'twentythirteen' ); ?></p>
 
 	<?php else : ?>
 
