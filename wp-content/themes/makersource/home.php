@@ -1,6 +1,6 @@
 <?php
 /**
- * The template for displaying Archive pages
+ * The template for displaying Archive pages, used as a home page
  *
  * Used to display archive-type pages if nothing more specific matches a query.
  * For example, puts together date-based pages if no date.php file exists.
@@ -32,7 +32,7 @@ get_header(); ?>
 					elseif ( is_year() ) :
 						printf( __( 'Yearly Archives: %s', 'twentythirteen' ), get_the_date( _x( 'Y', 'yearly archives date format', 'twentythirteen' ) ) );
 					else :
-						_e( 'Archives', 'twentythirteen' );
+						_e( get_bloginfo( 'name' ) . ' Blog', 'twentythirteen' );
 					endif;
 				?></h1>
 			</header><!-- .archive-header -->
