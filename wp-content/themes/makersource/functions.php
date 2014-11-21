@@ -32,6 +32,23 @@ function makersource_debug_page_request() {
   echo " -->\r\n";
 }
 
+function get_facetious_search_params() {
+	$result = array();
+	$val = get_search_query();
+	if ( $val ) 
+	 	$result[] = 'keyword "'.$val.'"';
+	$val = get_query_var( 'post_type' );
+	if ( $val )
+		$result[] = 'type "'.$val.'"';
+	foreach ( get_taxonomies( array( 'public' => true ), 'objects' ) as $tax ) {
+		$key = $tax->name;
+		$val = get_query_var( $key );
+		if ( $val )
+			$result[] = $key.' "'.$val.'"';
+	}
+	return implode( ' and ', $result);
+}
+
 function get_project_resource_type( $post_id ) {
 	$terms = get_the_terms( $post_id, 'resource_type' );					
 	if ( $terms && !is_wp_error( $terms ) ) {
