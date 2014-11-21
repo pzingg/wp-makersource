@@ -52,7 +52,8 @@
 	?>
 	
 	<div class="userpro-body">
-	
+		<div class="userpro-section userpro-collapsed-0">My Project Collections</div>
+		<div><?php echo do_shortcode('[userpro_bookmarklist]'); ?></div>
 		<?php do_action('userpro_pre_form_message'); ?>
 
 		<form action="" method="post" data-action="<?php echo $template; ?>">
