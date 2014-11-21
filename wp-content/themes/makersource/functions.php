@@ -2,7 +2,34 @@
 
 add_action( 'wp_enqueue_scripts', 'enqueue_parent_theme_style' );
 function enqueue_parent_theme_style() {
-    wp_enqueue_style( 'parent-style', get_template_directory_uri().'/style.css' );
+ 
+   wp_enqueue_style( 'parent-style', get_template_directory_uri().'/style.css' );
+}
+
+add_action( 'init', 'makersource_add_rewrite_rules' );
+function makersource_add_rewrite_rules() {
+    add_rewrite_rule(
+        'blog/?$',
+        'index.php?post_type=post',
+        'top'
+    );
+}
+
+function makersource_debug_page_request() {
+  global $wp, $template;
+
+  echo '<!-- Request: ';
+  echo empty($wp->request) ? 'None' : esc_html($wp->request);
+  echo " -->\r\n";
+  echo '<!-- Matched Rewrite Rule: ';
+  echo empty($wp->matched_rule) ? 'None' : esc_html($wp->matched_rule);
+  echo " -->\r\n";
+  echo '<!-- Matched Rewrite Query: ';
+  echo empty($wp->matched_query) ? 'None' : esc_html($wp->matched_query);
+  echo " -->\r\n";
+  echo '<!-- Loaded Template: ';
+  echo basename($template);
+  echo " -->\r\n";
 }
 
 function get_project_resource_type( $post_id ) {
