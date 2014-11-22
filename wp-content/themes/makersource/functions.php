@@ -92,6 +92,38 @@ function get_author_projects_url( $author_id, $post_type = 'project' ) {
 	return $link;
 }
 
+function project_resource_links() {
+	if ( is_single() ) {
+		$pt = get_post_type();
+		if ( $pt == 'project' ) {
+			$links = get_project_resource_links( get_the_id() );
+			if ( ! empty( $links ) ) {
+				echo '<div class="entry-related-links">';
+				echo '<h3 class="entry-related-header">Project Resources</h3>';
+				echo '<ul>';
+				foreach ( $links as $res ) {
+					echo '<li>'.$res['type'].': <a href="'.$res['link'].'">'.$res['title'].'</a></li>';
+				}
+				echo '</ul></div>';
+			}
+		} elseif ( $pt == 'project_resource' ) {
+			$links = get_resource_project_links( get_the_id() );
+			if ( ! empty( $links ) ) {
+				echo 'div class="entry-related-links">';
+				echo '<h3 class="entry-related-header">Links</h3>';
+				echo '<ul>';
+				echo '<li>'.$links['project']['type'].': <a href="'.$links['project']['link'].'">'.$links['project']['title'].'</a></li>';
+				if ( $links['prev'] ) {
+					echo '<li>&lt; Previous - '.$links['prev']['type'].': <a href="'.$links['prev']['link'].'">'.$links['prev']['title'].'</a></li>';
+				}
+				if ( $links['next'] ) {
+					echo '<li>&gt; Next - '.$links['next']['type'].': <a href="'.$links['next']['link'].'">'.$links['next']['title'].'</a></li>';
+				}
+				echo '</ul></div>';
+			}
+		}
+	}
+}
 
 /**
  * Print HTML with meta information for current post: categories, tags, permalink, author, and date.

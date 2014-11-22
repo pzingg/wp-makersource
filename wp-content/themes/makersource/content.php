@@ -39,43 +39,11 @@
 	<?php else : ?>
 	<div class="entry-content">
 		<?php the_content( __( 'Continue reading <span class="meta-nav">&rarr;</span>', 'twentythirteen' ) ); ?>
+		<?php project_resource_links(); ?>
 		<?php wp_link_pages( array( 'before' => '<div class="page-links"><span class="page-links-title">' . __( 'Pages:', 'twentythirteen' ) . '</span>', 'after' => '</div>', 'link_before' => '<span>', 'link_after' => '</span>' ) ); ?>
 	</div><!-- .entry-content -->
 	<?php endif; ?>
 
-	<div class="entry-related-links">
-	<?php
-	// Show related links
-	if ( is_single() ) {
-		$pt = get_post_type();
-		if ( $pt == 'project' ) {
-			$links = get_project_resource_links( get_the_id() );
-			if ( ! empty( $links ) ) {
-				echo '<h3 class="entry-related-header">Project Resources</h3>';
-				echo '<ul>';
-				foreach ( $links as $res ) {
-					echo '<li>'.$res['type'].': <a href="'.$res['link'].'">'.$res['title'].'</a></li>';
-				}
-				echo '</ul>';
-			}
-		} elseif ( $pt == 'project_resource' ) {
-			$links = get_resource_project_links( get_the_id() );
-			if ( ! empty( $links ) ) {
-				echo '<h3 class="entry-related">Links</h3>';
-				echo '<ul>';
-				echo '<li>'.$links['project']['type'].': <a href="'.$links['project']['link'].'">'.$links['project']['title'].'</a></li>';
-				if ( $links['prev'] ) {
-					echo '<li>&lt; Previous - '.$links['prev']['type'].': <a href="'.$links['prev']['link'].'">'.$links['prev']['title'].'</a></li>';
-				}
-				if ( $links['next'] ) {
-					echo '<li>&gt; Next - '.$links['next']['type'].': <a href="'.$links['next']['link'].'">'.$links['next']['title'].'</a></li>';
-				}
-				echo '</ul>';
-			}
-		}
-	}
-	?>
-	<div><!-- .related-links -->
 
 	<footer class="entry-meta">
 		<?php if ( comments_open() && ! is_single() ) : ?>
