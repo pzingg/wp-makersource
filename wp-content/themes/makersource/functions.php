@@ -86,6 +86,13 @@ function get_public_taxonomies_list( $separator = '', $post_id = false ) {
 	return false;
 }
 
+function get_author_projects_url( $author_id, $post_type = 'project' ) {
+	$link = get_author_posts_url( $author_id );
+	$link .= '?post_type=' . $post_type;
+	return $link;
+}
+
+
 /**
  * Print HTML with meta information for current post: categories, tags, permalink, author, and date.
  *
@@ -120,11 +127,39 @@ function twentythirteen_entry_meta() {
 	
 	// Post author
 	if ( in_array( $pt, array( 'post', 'project', 'project_resource' ) ) ) {
+		global $userpro;
+		$author_id = get_the_author_meta( 'ID' );
+		$post_count = count_user_posts( $author_id );
+		$project_count = count_user_posts( $author_id, 'project' );
+		$profile_url = $userpro->permalink( $author_id ); 
+		$author_display_name = get_the_author( );
+		/* 
+		 * /profile/pzingg for author profile
+		 * /search/author_name/pzingg for all contributions
+		 * /search/type/project/author_name/pzingg for projects
+		 * /search/blog/author/pzingg for posts
+		 */
 		printf( '<span class="author vcard"><a class="url fn n" href="%1$s" title="%2$s" rel="author">%3$s</a></span>',
-			esc_url( get_author_posts_url( get_the_author_meta( 'ID' ) ) ),
-			esc_attr( sprintf( __( 'View all posts by %s', 'twentythirteen' ), get_the_author() ) ),
-			get_the_author()
+			esc_url( $profile_url ),
+			esc_attr( sprintf( __( "View %s's profile", 'twentythirteen' ), $author_display_name ) ),
+			$author_display_name
 		);
+		if ( $project_count > 0 ) {
+			printf( ' <span class="author-projects-links"><a class="url fn n" href="%1$s" title="%2$s" rel="author">%3$d %4$s</a></span>',
+				esc_url( get_author_projects_url( $author_id ) ),
+				esc_attr( sprintf( __( "View all projects by %s", 'twentythirteen' ), $author_display_name ) ),
+				$project_count,
+				$project_count > 1 ? "Projects" : "Project"
+			);
+		}
+		if ( $post_count > 0 ) {
+			printf( ' <span class="author-posts-links"><a class="url fn n" href="%1$s" title="%2$s" rel="author">%3$d %4$s</a></span>',
+				esc_url( get_author_posts_url( $author_id ) ),
+				esc_attr( sprintf( __( "View all posts by %s", 'twentythirteen' ), $author_display_name ) ),
+				$post_count,
+				$post_count > 1 ? "Posts" : "Post"
+			);
+		}
 	}
 }
 

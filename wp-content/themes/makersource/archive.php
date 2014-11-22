@@ -23,6 +23,7 @@ get_header(); ?>
 		<div id="content" class="site-content" role="main">
 
 		<?php if ( have_posts() ) :
+			$author = false;
 			$singular_name = '';
 			$plural_name = 'Archives';
 			$pt = get_query_var( 'post_type' );
@@ -30,6 +31,10 @@ get_header(); ?>
 				$post_type = get_post_type_object( $pt ); 
 				$singular_name = ' ' . $post_type->labels->singular_name;
 				$plural_name = $post_type->labels->all_items;
+				$author_name = get_query_var( 'author_name' );
+				if ( $author_name ) :
+					$plural_name .= ' by ' . $author_name;
+				endif;
 			else :
 				$tt = get_query_var( 'taxonomy' );
 				if ( $tt ) :
@@ -53,6 +58,12 @@ get_header(); ?>
 				?></h1>
 			</header><!-- .archive-header -->
 
+			<?php if ( $author_name ) :
+				if ( get_the_author_meta( 'description' ) ) :
+					get_template_part( 'author-bio' );
+				endif;
+			endif; ?>
+			
 			<?php /* The loop */ ?>
 			<?php while ( have_posts() ) : the_post(); ?>
 				<?php get_template_part( 'content', get_post_format() ); ?>
