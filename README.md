@@ -10,8 +10,10 @@ Core and plugin versions
  * i-order-terms v1.3.1 - Custom taxonomony ordering
  * facetious v1.1.4 - Faceted search
  * codepress-admin-columns v2.2.9 - Display field columns in Admin UI edit table
- * jetpack v3.2.1 - Other niceties from the Wordpress.com core team
+ * nav-menu-roles v1.6.3 - Show menu items based on logged in or not
+ * redirection v2.3.11 - Redirect home page URL / to /project
  * rewrite-rules-inspector v1.2.1 - Debug rewrite rules
+ * jetpack v3.2.1 - Other niceties from the Wordpress.com core team
 
 Initial source code tarball
 ---------------------------

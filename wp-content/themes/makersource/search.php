@@ -17,9 +17,9 @@ get_header(); ?>
 			<header class="page-header">
 				<?php $sparams = get_facetious_search_params();
 					if ( $sparams )
-						$sparams = ' for '.$sparams;
+						$sparams = ' for ' . $sparams;
 				?>
-				<h1 class="page-title"><?php _e( 'Search Results'.$sparams, 'twentythirteen' ); ?></h1>
+				<h1 class="page-title"><?php _e( 'Search Results' . $sparams, 'twentythirteen' ); ?></h1>
 			</header>
 
 			<?php /* The loop */ ?>

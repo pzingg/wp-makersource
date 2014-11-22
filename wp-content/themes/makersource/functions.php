@@ -15,21 +15,133 @@ function makersource_add_rewrite_rules() {
     );
 }
 
-function makersource_debug_page_request() {
-  global $wp, $template;
+function get_public_taxonomy_terms( $post_id = false ) {
+	if ( !empty( $post_id ) ) {
+		$post_taxonomies = array();
+		$post_type = get_post_type( $post_id );
+		$taxonomies = get_object_taxonomies( $post_type , 'object' );
 
-  echo '<!-- Request: ';
-  echo empty($wp->request) ? 'None' : esc_html($wp->request);
-  echo " -->\r\n";
-  echo '<!-- Matched Rewrite Rule: ';
-  echo empty($wp->matched_rule) ? 'None' : esc_html($wp->matched_rule);
-  echo " -->\r\n";
-  echo '<!-- Matched Rewrite Query: ';
-  echo empty($wp->matched_query) ? 'None' : esc_html($wp->matched_query);
-  echo " -->\r\n";
-  echo '<!-- Loaded Template: ';
-  echo basename($template);
-  echo " -->\r\n";
+		foreach ( $taxonomies as $tax ) {
+			if ( $tax->public ) {
+				$taxonomy = $tax->name;
+				$term_links = array();
+				$terms = get_the_terms( $post_id, $taxonomy );
+
+				if ( is_wp_error( $terms ) )
+					return $terms;
+
+				if ( $terms ) {
+					foreach ( $terms as $term ) {
+						$link = get_term_link( $term, $taxonomy );
+						if ( is_wp_error( $link ) )
+							return $link;
+						$term_links[] = '<a href="' . esc_url( $link ) . '" rel="' . $taxonomy . '">' . $term->name . '</a>';
+					}
+				}
+
+				$term_links = apply_filters( "term_links-$taxonomy" , $term_links );
+				$post_terms[$taxonomy] = $term_links;
+			}
+		}
+		return $post_terms;
+	}
+	return false;
+}
+
+function get_public_taxonomies_list( $separator = '', $post_id = false ) {
+	if ( !$post_id ) {
+		$post_id = get_the_ID();
+	}
+	if ( $post_id ) {
+		$my_terms = get_public_taxonomy_terms( $post_id );
+		if ( $my_terms ) {
+			$my_taxonomies = array();
+			foreach ( $my_terms as $taxonomy => $terms ) {
+				$my_taxonomy = get_taxonomy( $taxonomy );
+				if ( !empty( $terms ) )          
+					$my_taxonomies[] = '<span class="' . $my_taxonomy->name . '-links">' . '<span class="entry-utility-prep entry-utility-prep-' . $my_taxonomy->name . '-links">' . $my_taxonomy->labels->name . ': ' . implode( $terms , ', ' ) . '</span></span>';
+			}
+
+			if ( !empty( $my_taxonomies ) ) {
+				$thelist = '';
+				if ( '' == $separator ) {
+					$thelist .= '<ul class="post-categories">';
+        			foreach ( $my_taxonomies as $my_taxonomy ) {
+						$thelist .= "\n\t<li>" . $my_taxonomy . '</li>';
+        			}
+        			$thelist .= '</ul>';
+      			} else {
+					$i = 0;
+					foreach ( $my_taxonomies as $my_taxonomy ) {
+						if ( 0 < $i )
+							$thelist .= $separator;
+						$thelist .= $my_taxonomy;
+					++$i;
+					}
+				}
+				return $thelist;
+			}
+		}
+	} 
+	return false;
+}
+
+/**
+ * Print HTML with meta information for current post: categories, tags, permalink, author, and date.
+ *
+ * Create your own twentythirteen_entry_meta() to override in a child theme.
+ *
+ * @since Twenty Thirteen 1.0
+ */
+function twentythirteen_entry_meta() {
+	if ( is_sticky() && is_home() && ! is_paged() )
+		echo '<span class="featured-post">' . __( 'Sticky', 'twentythirteen' ) . '</span>';
+
+	if ( ! has_post_format( 'link' ) && 'post' == get_post_type() )
+		twentythirteen_entry_date();
+
+	// Translators: used between list items, there is a space after the comma.
+	$categories_list = get_the_category_list( __( ', ', 'twentythirteen' ) );
+	if ( $categories_list ) {
+		echo '<span class="categories-links"><span class="entry-utility-prep entry-utility-prep-categories-links">Categories: ' . $categories_list . '</span></span><br/>';
+	}
+
+	// Translators: used between list items, there is a space after the comma.
+	$tag_list = get_the_tag_list( '', __( ', ', 'twentythirteen' ) );
+	if ( $tag_list ) {
+		echo '<span class="tags-links"><span class="entry-utility-prep entry-utility-prep-tags-links">Tags: ' . $tag_list . '</span></span><br/>';
+	}
+	
+	$taxonomies_list = get_public_taxonomies_list( '<br/>' );
+	if ( $taxonomies_list ) {
+		echo '<span class="categories-links">' . $taxonomies_list . '</span><br/>';
+	}
+	
+	// Post author
+	if ( in_array( get_post_type(), array( 'post', 'project', 'project_resource' ) ) ) {
+		printf( '<span class="author vcard"><a class="url fn n" href="%1$s" title="%2$s" rel="author">%3$s</a></span>',
+			esc_url( get_author_posts_url( get_the_author_meta( 'ID' ) ) ),
+			esc_attr( sprintf( __( 'View all posts by %s', 'twentythirteen' ), get_the_author() ) ),
+			get_the_author()
+		);
+	}
+}
+
+function makersource_debug_page_request() {
+	global $wp, $template;
+
+	echo '<!-- Request: ';
+	echo empty($wp->request) ? 'None' : esc_html($wp->request);
+	echo " -->\r\n";
+	echo '<!-- Matched Rewrite Rule: ';
+	echo empty($wp->matched_rule) ? 'None' : esc_html($wp->matched_rule);
+	echo " -->\r\n";
+	echo '<!-- Matched Rewrite Query: ';
+	echo empty($wp->matched_query) ? 'None' : esc_html($wp->matched_query);
+	echo " -->\r\n";
+	echo '<!-- Loaded Template: ';
+	echo basename($template);
+	echo " -->\r\n";
 }
 
 function get_facetious_search_params() {
