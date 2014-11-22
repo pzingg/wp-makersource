@@ -23,7 +23,7 @@ get_header(); ?>
 		<div id="content" class="site-content" role="main">
 
 		<?php if ( have_posts() ) :
-			$author = false;
+			$author_name = false;
 			$singular_name = '';
 			$plural_name = 'Archives';
 			$pt = get_query_var( 'post_type' );
