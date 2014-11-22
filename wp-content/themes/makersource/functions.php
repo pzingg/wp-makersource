@@ -97,7 +97,8 @@ function twentythirteen_entry_meta() {
 	if ( is_sticky() && is_home() && ! is_paged() )
 		echo '<span class="featured-post">' . __( 'Sticky', 'twentythirteen' ) . '</span>';
 
-	if ( ! has_post_format( 'link' ) && 'post' == get_post_type() )
+	$pt = get_post_type();
+	if ( ! has_post_format( 'link' ) && 'post' == $pt )
 		twentythirteen_entry_date();
 
 	// Translators: used between list items, there is a space after the comma.
@@ -118,7 +119,7 @@ function twentythirteen_entry_meta() {
 	}
 	
 	// Post author
-	if ( in_array( get_post_type(), array( 'post', 'project', 'project_resource' ) ) ) {
+	if ( in_array( $pt, array( 'post', 'project', 'project_resource' ) ) ) {
 		printf( '<span class="author vcard"><a class="url fn n" href="%1$s" title="%2$s" rel="author">%3$s</a></span>',
 			esc_url( get_author_posts_url( get_the_author_meta( 'ID' ) ) ),
 			esc_attr( sprintf( __( 'View all posts by %s', 'twentythirteen' ), get_the_author() ) ),

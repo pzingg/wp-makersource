@@ -33,3 +33,7 @@
      min-height:140px;
      background-color:#eee;
 }
+
+.single-author .entry-meta .author {
+    display: block;
+}

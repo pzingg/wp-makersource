@@ -82,3 +82,8 @@ Use UserPro User Bookmarks Add-On ('userpro-bookmarks').  Changed "Default Colle
 
 Enabled display of user collections on profile pages, by "subclassing" 
 /userpro/templates/view.php to /twentythirteen/userpro/view.php.  Note that code in userpro loads subclassed templates using get\_template\_directory(), which specifies the parent theme, not the child theme.
+
+TODO
+----
+Correct permalinks to projects by author.
+Why does WP core set .single-author class on body when we have two authors (of custom post type content)? 
