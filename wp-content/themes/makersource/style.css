@@ -37,3 +37,7 @@
 .single-author .entry-meta .author {
     display: block;
 }
+
+.entry-bookmark-header {
+    margin-bottom: 0px;
+}

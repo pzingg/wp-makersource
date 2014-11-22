@@ -85,5 +85,3 @@ Enabled display of user collections on profile pages, by "subclassing"
 
 TODO
 ----
-Correct permalinks to projects by author.
-Why does WP core set .single-author class on body when we have two authors (of custom post type content)? 

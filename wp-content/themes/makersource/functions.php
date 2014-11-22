@@ -15,6 +15,13 @@ function makersource_add_rewrite_rules() {
     );
 }
 
+add_action('the_content', 'makersource_related_and_bookmark', 100);
+function makersource_related_and_bookmark( $content ) {
+	$content .= makersource_project_resource_links();
+	$content .= makersource_bookmark_widget();
+	return $content;
+}
+
 function get_public_taxonomy_terms( $post_id = false ) {
 	if ( !empty( $post_id ) ) {
 		$post_taxonomies = array();
@@ -92,37 +99,51 @@ function get_author_projects_url( $author_id, $post_type = 'project' ) {
 	return $link;
 }
 
-function project_resource_links() {
+function makersource_project_resource_links() {
+	$output = '';
 	if ( is_single() ) {
 		$pt = get_post_type();
 		if ( $pt == 'project' ) {
 			$links = get_project_resource_links( get_the_id() );
 			if ( ! empty( $links ) ) {
-				echo '<div class="entry-related-links">';
-				echo '<h3 class="entry-related-header">Project Resources</h3>';
-				echo '<ul>';
+				$output .= '<div class="entry-related-links">';
+				$output .= '<h4 class="entry-related-header">Project Resources</h4>';
+				$output .= '<ul>';
 				foreach ( $links as $res ) {
-					echo '<li>'.$res['type'].': <a href="'.$res['link'].'">'.$res['title'].'</a></li>';
+					$output .= '<li>'.$res['type'].': <a href="'.$res['link'].'">'.$res['title'].'</a></li>';
 				}
-				echo '</ul></div>';
+				$output .= '</ul></div>';
 			}
 		} elseif ( $pt == 'project_resource' ) {
 			$links = get_resource_project_links( get_the_id() );
 			if ( ! empty( $links ) ) {
-				echo 'div class="entry-related-links">';
-				echo '<h3 class="entry-related-header">Links</h3>';
-				echo '<ul>';
-				echo '<li>'.$links['project']['type'].': <a href="'.$links['project']['link'].'">'.$links['project']['title'].'</a></li>';
+				$output .= '<div class="entry-related-links">';
+				$output .= '<h4 class="entry-related-header">Links</h4>';
+				$output .= '<ul>';
+				$output .= '<li>'.$links['project']['type'].': <a href="'.$links['project']['link'].'">'.$links['project']['title'].'</a></li>';
 				if ( $links['prev'] ) {
-					echo '<li>&lt; Previous - '.$links['prev']['type'].': <a href="'.$links['prev']['link'].'">'.$links['prev']['title'].'</a></li>';
+					$output .= '<li>&lt; Previous - '.$links['prev']['type'].': <a href="'.$links['prev']['link'].'">'.$links['prev']['title'].'</a></li>';
 				}
 				if ( $links['next'] ) {
-					echo '<li>&gt; Next - '.$links['next']['type'].': <a href="'.$links['next']['link'].'">'.$links['next']['title'].'</a></li>';
+					$output .= '<li>&gt; Next - '.$links['next']['type'].': <a href="'.$links['next']['link'].'">'.$links['next']['title'].'</a></li>';
 				}
-				echo '</ul></div>';
+				$output .= '</ul></div>';
 			}
 		}
 	}
+	return $output;
+}
+
+function makersource_bookmark_widget() {
+	$output = '';
+	if (userpro_is_logged_in()) {
+		global $userpro_fav; 
+		$output .= '<div class="entry-bookmark">';
+		$output .= '<h4 class="entry-bookmark-header">Bookmark This Post</h4>';
+		$output .= $userpro_fav->bookmark();
+		$output .= '</div>';
+	}
+	return $output;
 }
 
 /**
