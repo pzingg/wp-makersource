@@ -1,11 +1,17 @@
 <?php
 
+/* 
+ * Action to set up our child theme on init.
+ */
 add_action( 'wp_enqueue_scripts', 'enqueue_parent_theme_style' );
 function enqueue_parent_theme_style() {
  
    wp_enqueue_style( 'parent-style', get_template_directory_uri().'/style.css' );
 }
 
+/*
+ * Action to send "/blog" url to post archives.
+ */
 add_action( 'init', 'makersource_add_rewrite_rules' );
 function makersource_add_rewrite_rules() {
     add_rewrite_rule(
@@ -15,12 +21,57 @@ function makersource_add_rewrite_rules() {
     );
 }
 
+/*
+ * Action to append related links and bookmark widget when project
+ * content is displayed on content.php template.
+ */
 add_action('the_content', 'makersource_related_and_bookmark', 100);
 function makersource_related_and_bookmark( $content ) {
 	$content .= makersource_project_resource_links();
 	$content .= makersource_bookmark_widget();
 	return $content;
 }
+
+/* 
+ * Filter to set up resource_type and parent_resource meta for 
+ * related project_resource type posts in wp-admin.
+ *
+ * How metaboxes are set up in WordPress:
+ * post_categories_meta_box for hierarchical (checkboxes)
+ *   -> wp_terms_checklist
+ *    template.php:189 sets up 'selected_cats' to post object's terms
+ *     -> wp_get_object_terms
+ *     -> Walker_Category_Checklist::walk
+ *       -> <input id="in-cat_name-termid" type="checkbox"...
+ *
+ * post_tags_meta_box for non-hierarchical (autocomplete)
+ * 
+ */
+add_action( 'edit_form_top', 'makersource_new_project_resource' );
+function makersource_new_project_resource( $post ) {
+	if ( 0 != $post->ID && 'project_resource' == $post->post_type ) {
+		/* taxonomy terms */
+		foreach (array('resource_type') as $taxonomy) {
+			if ( !empty( $_REQUEST[$taxonomy] ) ) {
+				$terms = array($_REQUEST[$taxonomy]);
+				wp_set_object_terms( $post->ID, $terms, $taxonomy, false );
+			}
+		}
+	}
+}
+
+add_filter( 'pods_form_ui_field_pick_value', 'makersource_pods_pick_value', 10, 5 );
+function makersource_pods_pick_value( $value, $name, $options, $pod, $id ) {
+	/* relationship fields */
+	$meta_key = str_replace( 'pods_meta_', '', $name );
+	if ( in_array($meta_key, array('resource_parent') ) ) {
+		if ( !empty( $_REQUEST[$meta_key] ) ) {
+			$value = array( $_REQUEST['resource_parent'] );
+		}
+	}
+	return $value;
+}
+
 
 function get_public_taxonomy_terms( $post_id = false ) {
 	if ( !empty( $post_id ) ) {

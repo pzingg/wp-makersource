@@ -85,3 +85,8 @@ Enabled display of user collections on profile pages, by "subclassing"
 
 TODO
 ----
+Review other plugin code to see if there's a better way
+to manage and add new related project resources than the Pods multi-select
+input. Should be able to search for project resources or add new,
+and explicitly remove resources.
+
