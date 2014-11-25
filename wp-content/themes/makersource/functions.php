@@ -44,6 +44,13 @@ function makersource_admin_init() {
 }
 
 /* 
+ * Metabox for new project in wp-admin.
+ */
+function msmeta_setup() {
+    include( MAKERSOURCE_THEME_FOLDER . '/metabox.php' );
+}
+
+/* 
  * Action to set up required javascript for add new project resource.
  */
 add_action( 'admin_enqueue_scripts', 'makersource_admin_scripts' );
@@ -131,6 +138,20 @@ function msmeta_save_post( $post_id ) {
 }
 
 /*
+ * For project resoures, append the type to the tile
+ */
+add_filter( 'the_title', 'makersource_resource_title', 10, 2 );
+function makersource_resource_title( $title, $post_id = null ) {
+	if ( $post_id ) {
+		$res_type = get_project_resource_type( $post_id );
+		if ( $res_type ) {
+			$title .= ' (' . $res_type . ')';
+		}
+	}
+	return $title;
+}
+
+/*
  * Action to append related links and bookmark widget when project
  * content is displayed on content.php template.
  */
@@ -139,13 +160,6 @@ function makersource_content( $content ) {
 	$content .= makersource_project_resource_links();
 	$content .= makersource_bookmark_widget();
 	return $content;
-}
-
-/* 
- * Metabox for new project in wp-admin.
- */
-function msmeta_setup() {
-    include( MAKERSOURCE_THEME_FOLDER . '/metabox.php' );
 }
 
 /* 
@@ -324,28 +338,39 @@ function makersource_project_resource_links() {
 	if ( is_single() ) {
 		$pt = get_post_type();
 		if ( $pt == 'project' ) {
-			$links = get_project_resource_links( get_the_id() );
-			if ( ! empty( $links ) ) {
+			$resources = get_project_resource_links( get_the_id() );
+			if ( !empty( $resources ) ) {
 				$output .= '<div class="entry-related-links">';
 				$output .= '<h4 class="entry-related-header">Project Resources</h4>';
 				$output .= '<ul>';
-				foreach ( $links as $res ) {
-					$output .= '<li>'.$res['type'].': <a href="'.$res['view'].'">'.$res['title'].'</a></li>';
+				foreach ( $resources['all'] as $res ) {
+					$output .= '<li><a href="'.$res['view'].'">'.$res['title'].'</a></li>';
 				}
 				$output .= '</ul></div>';
 			}
 		} elseif ( $pt == 'project_resource' ) {
-			$links = get_resource_project_links( get_the_id() );
-			if ( ! empty( $links ) ) {
+			$projects = get_resource_project_links( get_the_id() );
+			if ( !empty( $projects ) ) {
 				$output .= '<div class="entry-related-links">';
-				$output .= '<h4 class="entry-related-header">Links</h4>';
+				$output .= '<h4 class="entry-related-header">Projects That Include This Resource</h4>';
 				$output .= '<ul>';
-				$output .= '<li>'.$links['project']['type'].': <a href="'.$links['project']['view'].'">'.$links['project']['title'].'</a></li>';
-				if ( $links['prev'] ) {
-					$output .= '<li>&lt; Previous - '.$links['prev']['type'].': <a href="'.$links['prev']['view'].'">'.$links['prev']['title'].'</a></li>';
-				}
-				if ( $links['next'] ) {
-					$output .= '<li>&gt; Next - '.$links['next']['type'].': <a href="'.$links['next']['view'].'">'.$links['next']['title'].'</a></li>';
+				foreach ( $projects as $project ) {
+					$output .= '<li>' . $project['type'] . ': <a href="'.$project['view'].'">' . $project['title'] . '</a>';
+					if ( $project['prev_resource'] || $project['next_resource'] )  {
+						$output .= '<ul>';
+						if ( $project['prev_resource'] ) {
+							$output .= '<li>&lt; Previous in ' . $project['title'] . 
+								' - <a href="' . $project['prev_resource']['view'] . '">' . 
+								$project['prev_resource']['title'] . '</a></li>';
+						}
+						if ( $project['next_resource'] ) {
+							$output .= '<li>&gt; Next in ' . $project['title'] . 
+								' - <a href="' . $project['next_resource']['view'] . '">' .
+								$project['next_resource']['title'] . '</a></li>';
+						}
+						$output .= '</ul>';
+					}
+					$output .= '</li>';
 				}
 				$output .= '</ul></div>';
 			}
@@ -354,12 +379,22 @@ function makersource_project_resource_links() {
 	return $output;
 }
 
+function get_post_type_name() {
+	$pt = get_post_type();
+	$lookup = array(
+		'post' => 'Post',
+		'page' => 'Page',
+		'project' => 'Project',
+		'project_resource' => 'Resource');
+	return isset( $lookup[$pt] ) ? $lookup[$pt] : 'Post';
+}
+
 function makersource_bookmark_widget() {
 	$output = '';
 	if (userpro_is_logged_in()) {
-		global $userpro_fav; 
+		global $userpro_fav; 		
 		$output .= '<div class="entry-bookmark">';
-		$output .= '<h4 class="entry-bookmark-header">Bookmark This Post</h4>';
+		$output .= '<h4 class="entry-bookmark-header">Bookmark This ' . get_post_type_name() . '</h4>';
 		$output .= $userpro_fav->bookmark();
 		$output .= '</div>';
 	}
@@ -470,11 +505,18 @@ function get_facetious_search_params() {
 	return implode( ' and ', $result);
 }
 
-function get_project_resource_type( $post_id ) {
-	$terms = get_the_terms( $post_id, 'resource_type' );					
+/* 
+ * Get the first resource type associated with the project resource 
+ */
+function get_project_resource_type( $post_id, $with_order = false ) {
+	$terms = get_the_terms( $post_id, 'resource_type' );
 	if ( $terms && !is_wp_error( $terms ) ) {
 		foreach ( $terms as $term ) {
-			return $term->name;
+			if ( $with_order ) {
+				return array( $term->name, $term->custom_order );
+			} else {
+				return $term->name;
+			}
 		}
 	}
 	return '';
@@ -492,39 +534,32 @@ function get_project_resource_ids( $proj_id ) {
 	return $resource_list;
 }
 
-function project_link_from_id( $res_id ) {
+function resource_link_from_id( $res_id ) {
+	$rt_array = get_project_resource_type( $res_id, true );
+	$title = get_the_title( $res_id );
 	return array(
 		'ID'    => $res_id,
-		'type'  => get_project_resource_type( $res_id ),
-		'title' => get_the_title( $res_id ),
+		'type'  => $rt_array[0],
+		'order' => sprintf('%02d-%s', $rt_array[1], $title ),
+		'title' => $title,
 		'view'  => get_permalink( $res_id ),
-		'edit'  => get_admin_url() . "edit.php?post_type=project_resource&id=" . $res_id
-	);
+		'edit'  => get_admin_url() . "edit.php?post_type=project_resource&id=" . $res_id,
+ 	);
 }
 
-function get_project_resource_links( $proj_id ) {
-	return array_map( 'project_link_from_id',  get_project_resource_ids( $proj_id ) );
+function sort_resource_links( $a, $b ) {
+	return strcmp( $a['order'], $b['order'] );
 }
 
-function get_resource_project_links( $res_id ) {
-	$pod = pods( 'project_resource', $res_id );
-	$parent = $pod->field( 'resource_parent' );
-	if ( !empty( $parent ) ) {
-		$proj_id = $parent['ID'];
-		$proj = array(
-			'ID'    => $proj_id,
-			'type'  => 'Project',
-			'title' => get_the_title( $proj_id ),
-			'view'  => get_permalink( $proj_id ),
-			'edit'  => get_admin_url() . "edit.php?post_type=project&id=" . $proj_id
-		);
-			
-		$resource_list = get_project_resource_links( $proj_id );
+function get_project_resource_links( $proj_id, $res_id = null ) {
+	$resources = array_map( 'resource_link_from_id',  get_project_resource_ids( $proj_id ) );
+	usort( $resources, 'sort_resource_links' );
+	$prev = null;
+	$next = null;
+	if ( $res_id ) {
 		$last = null;
 		$take_next = false;
-		$prev = null;
-		$next = null;
-		foreach ( $resource_list as $res ) {
+		foreach ( $resources as $res ) {
 			if ( $res['ID'] == $res_id ) {
 				$prev = $last;
 				$take_next = true;
@@ -534,10 +569,52 @@ function get_resource_project_links( $res_id ) {
 			}
 			$last = $res;
 		}
-		return array(
-			'project' => $proj,
-			'prev' => $prev,
-			'next' => $next );
 	}
-	return array();
+	return array(
+		'all'  => $resources,
+		'prev' => $prev,
+		'next' => $next
+	);
+}
+
+function get_resource_project_ids( $res_id ) {
+	$project_list = array();
+	$pod = pods( 'project_resource', $res_id );
+	$parents = $pod->field( 'resource_parent' );
+	if ( !empty( $parents ) ) {
+		foreach ( $parents as $parent ) {
+			$project_list[] = $parent['ID'];
+		}
+	}
+	return $project_list;
+}
+
+function project_link_from_id( $proj_id ) {
+	return array(
+		'ID'    => $proj_id,
+		'type'  => 'Project',
+		'title' => get_the_title( $proj_id ),
+		'view'  => get_permalink( $proj_id ),
+		'edit'  => get_admin_url() . "edit.php?post_type=project&id=" . $proj_id
+	);
+}
+
+function sort_project_links( $a, $b ) {
+	return strcmp( $a['title'], $b['title'] );
+}
+
+function get_resource_project_links( $res_id ) {
+	$projects = array_map( 'project_link_from_id', get_resource_project_ids( $res_id ) );
+	usort( $projects, 'sort_project_links' );
+	$prev = null;
+	$next = null;
+	if ( empty($projects) ) {
+		return array();
+	}
+	for ( $i = 0; $i < count( $projects ); $i++ ) {
+		$resources = get_project_resource_links( $projects[$i]['ID'], $res_id );
+		$projects[$i]['next_resource'] = $resources['next'];
+		$projects[$i]['prev_resource'] = $resources['prev'];
+	}
+	return $projects;
 }
