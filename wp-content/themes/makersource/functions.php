@@ -1,13 +1,7 @@
 <?php
 
-/* 
- * Action to set up our child theme on init.
- */
-add_action( 'wp_enqueue_scripts', 'enqueue_parent_theme_style' );
-function enqueue_parent_theme_style() {
- 
-   wp_enqueue_style( 'parent-style', get_template_directory_uri().'/style.css' );
-}
+define( 'MAKERSOURCE_THEME_FOLDER', dirname(__FILE__) );
+$msjs = 'not set';
 
 /*
  * Action to send "/blog" url to post archives.
@@ -21,15 +15,45 @@ function makersource_add_rewrite_rules() {
     );
 }
 
-/*
- * Action to append related links and bookmark widget when project
- * content is displayed on content.php template.
+/* 
+ * Action to set up our child theme on init.
  */
-add_action('the_content', 'makersource_related_and_bookmark', 100);
-function makersource_related_and_bookmark( $content ) {
-	$content .= makersource_project_resource_links();
-	$content .= makersource_bookmark_widget();
-	return $content;
+add_action( 'wp_enqueue_scripts', 'enqueue_parent_theme_style' );
+function enqueue_parent_theme_style() {
+	wp_enqueue_style( 'parent-style', get_template_directory_uri() . '/style.css' );
+}
+
+/* 
+ * Action to set up better child/parent UI for Pods relationships.
+ */
+add_action( 'admin_init', 'makersource_admin_init' );
+function makersource_admin_init() {
+    // wp_enqueue_style('msmeta_css', MAKERSOURCE_THEME_FOLDER . '/custom/meta.css');
+
+    // add a meta box for each of the wordpress page types: posts and pages
+    foreach (array('project') as $type) {
+        add_meta_box( 
+			'makersource_' . $type . '_meta', 
+			'Add a Resource', 
+			'msmeta_setup', 
+			$type, 
+			'normal', 
+			'core' 
+		);
+    }
+}
+
+/* 
+ * Action to set up required javascript for add new project resource.
+ */
+add_action( 'admin_enqueue_scripts', 'makersource_admin_scripts' );
+function makersource_admin_scripts() {
+	global $msjs;
+	
+	$msjs = get_stylesheet_directory_uri() . '/makersource.js';
+	wp_enqueue_script( 'jquery-ui-autocomplete' );
+	wp_register_script( 'makersource', $msjs, array('jquery', 'jquery-ui-autocomplete'), null );
+	wp_enqueue_script( 'makersource' );
 }
 
 /* 
@@ -60,6 +84,9 @@ function makersource_new_project_resource( $post ) {
 	}
 }
 
+/* 
+ * Filter to set up Pods relationship pick field.
+ */
 add_filter( 'pods_form_ui_field_pick_value', 'makersource_pods_pick_value', 10, 5 );
 function makersource_pods_pick_value( $value, $name, $options, $pod, $id ) {
 	/* relationship fields */
@@ -72,6 +99,148 @@ function makersource_pods_pick_value( $value, $name, $options, $pod, $id ) {
 	return $value;
 }
 
+/* add_action( 'save_post', 'msmeta_save_post' ); */
+function msmeta_save_post( $post_id ) {
+	if ( !isset( $_POST['msmeta_nonce'] ) ) {
+		return;
+	}
+	if ( !wp_verify_nonce( $_POST['msmeta_nonce'], 'makersource_meta_box' ) ) {
+		return;
+	}
+	// If this is an autosave, our form has not been submitted, so we don't want to do anything.
+	if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+	if ( 'project' != $_POST['post_type'] ) {
+		return;
+	}
+	// Check the user's permissions.
+	if ( isset( $_POST['post_type'] ) && 'page' == $_POST['post_type'] ) {
+		if ( !current_user_can( 'edit_page', $post_id ) ) {
+			return;
+		}
+	} else {
+		if ( !current_user_can( 'edit_post', $post_id ) ) {
+			return;
+		}
+	}
+	if ( ! isset( $_POST['myplugin_new_field'] ) ) {
+		return;
+	}
+	// do something with custom data
+}
+
+/*
+ * Action to append related links and bookmark widget when project
+ * content is displayed on content.php template.
+ */
+add_action( 'the_content', 'makersource_content', 10 );
+function makersource_content( $content ) {
+	$content .= makersource_project_resource_links();
+	$content .= makersource_bookmark_widget();
+	return $content;
+}
+
+/* 
+ * Metabox for new project in wp-admin.
+ */
+function msmeta_setup() {
+    include( MAKERSOURCE_THEME_FOLDER . '/metabox.php' );
+}
+
+/* 
+ * Ajax action based on wp_ajax_autocomplete_user()
+ */
+add_action( 'wp_ajax_autocomplete_post', 'makersource_ajax_autocomplete_post' );
+function makersource_ajax_autocomplete_post() {
+	global $wpdb;
+	
+	$return = array();
+	
+	// Must specify a post type
+	$post_type = isset( $_REQUEST['post_type'] ) ? $_REQUEST['post_type'] : 'project_resource';
+
+	// Must specify a title fragment
+	$q = trim( isset( $_REQUEST['term'] ) ? $_REQUEST['term'] : '' );
+	if ( '' != $q ) {
+		// Check the type of request
+		// Current allowed values are `add` and `search`
+		if ( isset( $_REQUEST['autocomplete_type'] ) && 'search' === $_REQUEST['autocomplete_type'] ) {
+			$type = $_REQUEST['autocomplete_type'];
+		} else {
+			$type = 'add';
+		}
+		
+		// Exclude current related posts
+		$existing_posts = isset( $_REQUEST['existing_posts'] ) ? 
+			array_map( 'absint', explode( ',', $_REQUEST['existing_posts'] ) ) : array();
+		$include_posts = ( $type == 'search' ? $existing_posts : array() );
+		$exclude_posts = ( $type == 'add' ? $existing_posts : array() );
+
+		$like_posts = $wpdb->get_col( "SELECT ID FROM " . $wpdb->posts . " WHERE post_title LIKE '" . $q . "%'" );
+		$posts = get_posts( array(
+			'post__in'         => $like_posts,
+			'orderby'          => 'title',
+			'order'            => 'ASC',
+			'include'          => $include_posts,
+			'exclude'          => $exclude_posts,
+			'post_type'        => $post_type,
+			'post_status'      => 'publish',
+			'suppress_filters' => true
+		) );
+
+		foreach ( $posts as $post ) {
+			$res_type = get_project_resource_type( $post->ID );
+			$label = $post->post_title;
+			if ( $res_type ) {
+				$label .= ' (' . $res_type . ')';
+			}
+			$return[] = array(
+				'label' =>     $label,
+				'title' =>     $post->post_title,
+				'ID' =>        $post->ID,
+				'post_type' => $post->post_type,
+				'author' =>    $post->post_author,
+				'status' =>    $post->post_status,
+				'resource_type' => $res_type
+			);
+		}
+	}
+	wp_die( wp_json_encode( $return ) );
+}
+
+
+/*
+function msmeta_show_existing( ) {
+	foreach ( $children as $link_id => $child ) {
+		$child_id = $child->ID;
+
+		$edit_url = get_admin_url() . "post.php?post={$child_id}&amp;action=edit&amp;sp_parent=" . SP_Parent_Param::generate_sp_parent_param( $post->ID, $sp_pt_link, $sp_parent, 0 ) . "&sp_pt_link=" . $this->connection->get_id();
+
+		echo "<tr id='{$link_id}'>\n";
+		echo "<td>";
+		echo "<strong><a href='{$edit_url}' class='row-title' title='{$child->post_title}'>{$child->post_title}</a></strong>\n";
+		echo "<div class='row-actions'>\n";
+		echo "<span class='edit'><a href='{$edit_url}' title='" . __( 'Edit this item', 'post-connector' ) . "'>";
+		_e( 'Edit', 'post-connector' );
+		echo "</a> | </span>";
+		echo "<span class='trash'><a class='submitdelete' title='" . __( 'Delete this item', 'post-connector' ) . "' href='javascript:;'>";
+		_e( 'Delete', 'post-connector' );
+		echo "</a></span>";
+		echo "</div>\n";
+		echo "</td>\n";
+		echo "</tr>\n";
+		$i ++;
+	}
+	echo "</tbody>\n";
+	echo "</table>\n";
+
+} else {
+
+	echo '<br/>';
+	printf( __( 'No %s found.', 'post-connector' ), $child_post_type->labels->name );
+}
+*/
 
 function get_public_taxonomy_terms( $post_id = false ) {
 	if ( !empty( $post_id ) ) {
@@ -161,7 +330,7 @@ function makersource_project_resource_links() {
 				$output .= '<h4 class="entry-related-header">Project Resources</h4>';
 				$output .= '<ul>';
 				foreach ( $links as $res ) {
-					$output .= '<li>'.$res['type'].': <a href="'.$res['link'].'">'.$res['title'].'</a></li>';
+					$output .= '<li>'.$res['type'].': <a href="'.$res['view'].'">'.$res['title'].'</a></li>';
 				}
 				$output .= '</ul></div>';
 			}
@@ -171,12 +340,12 @@ function makersource_project_resource_links() {
 				$output .= '<div class="entry-related-links">';
 				$output .= '<h4 class="entry-related-header">Links</h4>';
 				$output .= '<ul>';
-				$output .= '<li>'.$links['project']['type'].': <a href="'.$links['project']['link'].'">'.$links['project']['title'].'</a></li>';
+				$output .= '<li>'.$links['project']['type'].': <a href="'.$links['project']['view'].'">'.$links['project']['title'].'</a></li>';
 				if ( $links['prev'] ) {
-					$output .= '<li>&lt; Previous - '.$links['prev']['type'].': <a href="'.$links['prev']['link'].'">'.$links['prev']['title'].'</a></li>';
+					$output .= '<li>&lt; Previous - '.$links['prev']['type'].': <a href="'.$links['prev']['view'].'">'.$links['prev']['title'].'</a></li>';
 				}
 				if ( $links['next'] ) {
-					$output .= '<li>&gt; Next - '.$links['next']['type'].': <a href="'.$links['next']['link'].'">'.$links['next']['title'].'</a></li>';
+					$output .= '<li>&gt; Next - '.$links['next']['type'].': <a href="'.$links['next']['view'].'">'.$links['next']['title'].'</a></li>';
 				}
 				$output .= '</ul></div>';
 			}
@@ -311,21 +480,30 @@ function get_project_resource_type( $post_id ) {
 	return '';
 }
 
-function get_project_resource_links( $proj_id ) {
+function get_project_resource_ids( $proj_id ) {
 	$resource_list = array();
 	$pod = pods( 'project', $proj_id );
 	$related = $pod->field( 'project_resources' );
 	if ( ! empty( $related ) ) {
 		foreach ( $related as $rel ) {
-			$res_id = $rel['ID'];
-			$resource_list[] = array(
-				'ID'    => $res_id,
-				'type'  => get_project_resource_type( $res_id ),
-				'title' => get_the_title( $res_id ),
-				'link'  => get_permalink( $res_id ) );
+			$resource_list[] = $rel['ID'];
 		}
 	}
 	return $resource_list;
+}
+
+function project_link_from_id( $res_id ) {
+	return array(
+		'ID'    => $res_id,
+		'type'  => get_project_resource_type( $res_id ),
+		'title' => get_the_title( $res_id ),
+		'view'  => get_permalink( $res_id ),
+		'edit'  => get_admin_url() . "edit.php?post_type=project_resource&id=" . $res_id
+	);
+}
+
+function get_project_resource_links( $proj_id ) {
+	return array_map( 'project_link_from_id',  get_project_resource_ids( $proj_id ) );
 }
 
 function get_resource_project_links( $res_id ) {
@@ -337,7 +515,9 @@ function get_resource_project_links( $res_id ) {
 			'ID'    => $proj_id,
 			'type'  => 'Project',
 			'title' => get_the_title( $proj_id ),
-			'link'  => get_permalink( $proj_id ) );
+			'view'  => get_permalink( $proj_id ),
+			'edit'  => get_admin_url() . "edit.php?post_type=project&id=" . $proj_id
+		);
 			
 		$resource_list = get_project_resource_links( $proj_id );
 		$last = null;
