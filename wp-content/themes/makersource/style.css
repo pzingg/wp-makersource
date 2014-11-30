@@ -14,30 +14,36 @@
 /* =Theme customization starts here
 -------------------------------------------------------------- */
 
+/* Just a picture, title and metadata for project search results and archives */
+.post-type-archive-project article.project .entry-content {
+     display:none;
+}
+
+/* Keep author link on a separate line */
+.single-author .entry-meta .author {
+    display: block;
+}
+
+/* Minimal spacing before UserPro bookmark widget */
+.entry-bookmark-header {
+    margin-bottom: 0px;
+}
+
+/* 3-column "gallery"-like display" for desktops */
 @media screen and (min-width: 700px) {
+    
     .post-type-archive-project article.project {
          display:inline-block;
          vertical-align:top;
-         width:30%;
+         width:30.75%;
          padding:1.25%;
          margin:1.25%;
          min-height:140px;
          background-color:#eee;
     }
+
+    .post-type-archive-project article.project .entry-title a {
+         font-size:0.6em;
+    }
 }
 
-.post-type-archive-project article.project .entry-content {
-     display:none;
-}
-
-.post-type-archive-project article.project .entry-title a {
-     font-size:0.6em;
-}
-
-.single-author .entry-meta .author {
-    display: block;
-}
-
-.entry-bookmark-header {
-    margin-bottom: 0px;
-}
