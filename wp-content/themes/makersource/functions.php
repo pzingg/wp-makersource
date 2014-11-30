@@ -339,7 +339,7 @@ function makersource_project_resource_links() {
 		$pt = get_post_type();
 		if ( $pt == 'project' ) {
 			$resources = get_project_resource_links( get_the_id() );
-			if ( !empty( $resources ) ) {
+			if ( !empty( $resources['all'] ) ) {
 				$output .= '<div class="entry-related-links">';
 				$output .= '<h4 class="entry-related-header">Project Resources</h4>';
 				$output .= '<ul>';
